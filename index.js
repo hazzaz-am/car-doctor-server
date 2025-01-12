@@ -10,7 +10,7 @@ const app = express();
 app.use([
 	cors({
 		origin: [
-			// "http://localhost:5173",
+			"http://localhost:5173",
 			"https://car-shop-47788.web.app",
 			"https://car-shop-47788.firebaseapp.com",
 		],
@@ -60,10 +60,16 @@ const client = new MongoClient(uri, {
 	},
 });
 
+const cookieOption = {
+	httpOnly: true,
+	secure: process.env.NODE_ENV === "production" ? true : false,
+	sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+};
+
 async function run() {
 	try {
 		// Connect the client to the server	(optional starting in v4.7)
-		await client.connect();
+		// await client.connect();
 		const serviceCollection = client.db("carshopDB").collection("services");
 		const bookingCollection = client.db("carshopDB").collection("bookings");
 
@@ -77,20 +83,16 @@ async function run() {
 			const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
 				expiresIn: "1h",
 			});
-			res
-				.cookie("token", token, {
-					httpOnly: true,
-					secure: true,
-					sameSite: "none",
-				})
-				.json({ success: true });
+			res.cookie("token", token, cookieOption).json({ success: true });
 		});
 
 		// CLEAR COOKIE
 		app.post("/logout", async (req, res) => {
 			const user = req.body;
 			console.log("logging out", user);
-			res.clearCookie("token", { maxAge: 0 }).json({ success: true });
+			res
+				.clearCookie("token", { ...cookieOption, maxAge: 0 })
+				.json({ success: true });
 		});
 
 		// --------------------------------------------
@@ -180,7 +182,7 @@ async function run() {
 		});
 
 		// Send a ping to confirm a successful connection
-		await client.db("admin").command({ ping: 1 });
+		// await client.db("admin").command({ ping: 1 });
 		console.log(
 			"Pinged your deployment. You successfully connected to MongoDB!"
 		);
