@@ -9,7 +9,11 @@ const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 app.use([
 	cors({
-		origin: ["http://localhost:5173"],
+		origin: [
+			// "http://localhost:5173",
+			"https://car-shop-47788.web.app",
+			"https://car-shop-47788.firebaseapp.com",
+		],
 		credentials: true,
 	}),
 	express.json(),
